@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: szczurpi
+Name: [your name]
+Date: 2026-09-27
+Course: Artificial Intelligence
+Semester: Fall 2026
+Assignment: MP1 - Robot navigation
 
-This program implements the uniform cost search algorithm for solving a maze
-(1 point cost for each move)
 """
 
 import numpy as np
-import queue # Needed for frontier queue
+import queue # Needed for frontier queue (wont need for new implementation)
 from heapq import heapify
 
 
@@ -57,7 +59,8 @@ class MazeState():
     
     def __lt__(self, other):
         """ Allows for ordering the states by the path (g) cost """
-        return self.gcost < other.gcost
+        #return self.gcost < other.gcost
+        return self.fcost < other.fcost
     
     def __str__(self):
         """ Returns the maze representation of the state """
@@ -79,38 +82,72 @@ class MazeState():
         self.maze[self.pos] = MazeState.PATH
     
     def get_new_pos(self, move):
-        """ Returns a new position from the current position and the specified move """
+        """ Returns a new position from the current position and the specified move 
+        *UPDATED: the modulo operations implement wrap-around movement 
+        """
         if move=='up':
-            new_pos = (self.pos[0]-1, self.pos[1])
+            new_pos = ((self.pos[0]-1) % rows, self.pos[1])
         elif move=='down':
-            new_pos = (self.pos[0]+1, self.pos[1])
+            new_pos = ((self.pos[0]+1)% rows, self.pos[1])
         elif move=='left':
-            new_pos = (self.pos[0], self.pos[1]-1)
+            new_pos = (self.pos[0], (self.pos[1]-1) % cols)
         elif move=='right':
-            new_pos = (self.pos[0], self.pos[1]+1)
+            new_pos = (self.pos[0], (self.pos[1]+1) % cols)
         else:
             raise('wrong direction for checking move')
         return new_pos
         
-    def can_move(self, move):
+    """
+    *UPDATED: The can_move() method now implements wrap-around movement. 
+    The commented-out code is the original version that did not allow wrap-around 
+    movement.
+    """
+    def can_move(self, move, disabled_move=None):
         """ Returns true if agent can move in the given direction """
-        new_pos = self.get_new_pos(move)
-        if new_pos[0] < 0 or new_pos[0] >= self.maze.shape[0] or new_pos[1] < 0 or new_pos[1] >= self.maze.shape[1]:
+        if move == disabled_move:
             return False
-        else:
-            return self.maze[new_pos]!=MazeState.WALL
-                    
+        new_pos = self.get_new_pos(move)
+
+        #if new_pos[0] < 0 or new_pos[0] >= self.maze.shape[0] or new_pos[1] < 0 or new_pos[1] >= self.maze.shape[1]:
+        #    return False
+        #else:
+
+        return self.maze[new_pos]!=MazeState.WALL
+
+
+
+    # -----------------IMPLEMENT CODE-------------------
+    #def heuristic(self):
+        """ Returns the heuristic value for the current state """
+
+    
     def gen_next_state(self, move):
-        """ Generates a new MazeState object by taking move from current state """
+        """ Generates a new MazeState object by taking move from current state 
+        *UPDATED: The new state is now generated with the fcost value calculated as
+        fcost = gcost + heuristic()
+        """
         new_pos = self.get_new_pos(move)
         if self.maze[new_pos] != MazeState.EXIT:
             self.maze[new_pos] = MazeState.VISITED
-        return MazeState(new_pos, self.gcost+1, self, move)
-            
+        #return MazeState(new_pos, self.gcost+1, self, move)
+        new_state = MazeState(new_pos, self.gcost+1, self, move)
+        new_state.fcost = new_state.gcost + new_state.heuristic()
+
+        return new_state
+
+
+
+    # -----------------IMPLEMENT CODE-------------------
+    #def run_astar(disabled_move):
+        """ Runs the A* search algorithm to find the shortest path to the exit """
+
+
+#-----------EDIT BELOW THIS LINE FOR NEW A* IMPLEMENTATION----------------
+
 # Display the heading info
 print('Artificial Intelligence')
 print('MP1: Robot navigation')
-print('SEMESTER: Spring 2024')
+print('SEMESTER: Fall 2026')
 print('NAME: [your name]')
 print()
 
