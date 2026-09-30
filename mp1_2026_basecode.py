@@ -212,53 +212,22 @@ class MazeState():
 print('Artificial Intelligence')
 print('MP1: Robot navigation')
 print('SEMESTER: Fall 2026')
-print('NAME: [your name]')
+print('NAME: Christopher Lodzinski, Lucille Finnerty, Jeffrey Elsenbach, and Bret Evenson')
 print()
 
 print('INITIAL MAZE')
 
-# load start state onto frontier priority queue
-frontier = queue.PriorityQueue() # This does best-first search
-#frontier = queue.LifoQueue() # This would do depth-first search
-#frontier = queue.Queue() # This would do breadth-first search
+print(MazeState())
 
-start_state = MazeState()
-frontier.put(start_state)
-print(start_state)
-# Keep a closed set of states to which optimal path was already found
-closed_set = set()
+#try each move as the disabled one and keep the shortest solution
+best_move = None
+best_length = None
+for move in ['left', 'right', 'down', 'up']:
+    print('SOLUTION AFTER DISABLED MOVE: ', move)
+    length = MazeState.run_astar(move)
+    if length is not None and (best_length is None or length < best_length):
+        best_move = move
+        best_length = length
 
-# Expand state (up to 4 moves possible)
-possible_moves = ['left','right','down','up']
-
-num_states = 0
-while not frontier.empty():
-    # Choose state at front of priority queue
-    next_state = frontier.get()
-    num_states = num_states + 1
-    
-    # If goal then quit and return path
-    if next_state.is_goal():
-        next_state.show_path()
-        break
-    
-    # Add state chosen for expansion to closed_set
-    closed_set.add(next_state)
-  
-    # Expanding the node
-    for move in possible_moves:
-        if next_state.can_move(move):
-            neighbor = next_state.gen_next_state(move)
-            if neighbor in closed_set:
-                continue
-            if neighbor not in frontier.queue:                           
-                frontier.put(neighbor)
-            else:
-                if neighbor.gcost < frontier.queue[frontier.queue.index(neighbor)].gcost:
-                    frontier.queue[frontier.queue.index(neighbor)] = neighbor
-                    heapify(frontier.queue)
-
-print(start_state)                
-print('\nNumber of states visited =',num_states)
-move_path_length = MazeState.move_num-1
-print('\nLength of shortest path = ', move_path_length)
+print('BEST MOVE: disable', best_move)
+print('SHORTEST PATH LENGTH FOR BEST MOVE:', best_length)
