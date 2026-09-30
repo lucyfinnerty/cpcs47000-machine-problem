@@ -140,8 +140,70 @@ class MazeState():
 
 
     # -----------------IMPLEMENT CODE-------------------
-    #def run_astar(disabled_move):
+    def run_astar(disabled_move):
         """ Runs the A* search algorithm to find the shortest path to the exit """
+        #reset the maze for a new run
+        MazeState.reset_state()
+    
+        # Load start state onto frontier priority queue
+        frontier = queue.PriorityQueue()  # This does best-first search
+        start_state = MazeState()
+        frontier.put(start_state)
+    
+        # Keep a closed set of states to which optimal path was already found
+        closed_set = set()
+    
+        # Expand state (up to 4 moves possible)
+        possible_moves = ['left', 'right', 'down', 'up']
+    
+        num_states = 0
+        #initialize the goal state
+        goal_state = None
+        while not frontier.empty():
+            # Choose state at front of priority queue
+            next_state = frontier.get()
+            num_states += 1
+    
+            # If goal then quit and return path
+            if next_state.is_goal():
+                goal_state = next_state
+                break
+    
+            # Add state chosen for expansion to closed_set
+            closed_set.add(next_state)
+    
+            # Expanding the node
+            for move in possible_moves:
+                #added disabled_move to skip the disabled direction
+                if next_state.can_move(move, disabled_move):
+                    neighbor = next_state.gen_next_state(move)
+                    if neighbor in closed_set:
+                        continue
+                    if neighbor not in frontier.queue:
+                        frontier.put(neighbor)
+                    else:
+                        #find and compare old route to new route
+                        index = frontier.queue.index(neighbor)
+                        #keep it if it is a better route
+                        if neighbor.gcost < frontier.queue[index].gcost:
+                            frontier.queue[index] = neighbor
+                            #resort the list
+                            heapify(frontier.queue)
+    
+        #added a case for if there is no solution to the maze
+        if goal_state is None:
+            print(start_state)
+            print('No solution')
+            return None
+    
+        goal_state.show_path()
+        print(start_state)
+        print('\nNumber of states visited =', num_states)
+        path_length = MazeState.move_num - 1
+        print('\nLength of shortest path = ', path_length)
+        #added path length return
+        return path_length
+
 
 
 #-----------EDIT BELOW THIS LINE FOR NEW A* IMPLEMENTATION----------------
