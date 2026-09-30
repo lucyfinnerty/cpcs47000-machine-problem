@@ -25,7 +25,7 @@ class MazeState():
     START_MARK = 5
     END_MARK = 6
 
-    MAZE_FILE = 'maze2024.txt'
+    MAZE_FILE = 'maze2026.txt'
     maze = np.loadtxt(MAZE_FILE, dtype=np.int32)  
     start = tuple(np.array(np.where(maze==5)).flatten())
     ends = np.where(maze==2)
@@ -38,9 +38,9 @@ class MazeState():
         MazeState.ends = np.where(MazeState.maze==2)
         MazeState.move_num = 0
     
-    def __init__(self, conf=start, g=0, pred_state=None, pred_action=None):
+    def __init__(self, conf=None, g=0, pred_state=None, pred_action=None):
         """ Initializes the state with information passed from the arguments """
-        self.pos = conf         # Configuration of the state - current coordinates
+        self.pos = conf if conf is not None else MazeState.start  # Configuration of the state -current coordinates
         self.gcost = g          # Path cost
         self.pred = pred_state  # Predecesor state
         self.action_from_pred = pred_action  # Action from predecesor state to current state
