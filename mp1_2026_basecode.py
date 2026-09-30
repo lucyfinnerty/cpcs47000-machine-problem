@@ -85,14 +85,16 @@ class MazeState():
         """ Returns a new position from the current position and the specified move 
         *UPDATED: the modulo operations implement wrap-around movement 
         """
+
+        num_rows, num_cols = self.maze.shape
         if move=='up':
-            new_pos = ((self.pos[0]-1) % rows, self.pos[1])
+            new_pos = ((self.pos[0]-1) % num_rows, self.pos[1])
         elif move=='down':
-            new_pos = ((self.pos[0]+1)% rows, self.pos[1])
+            new_pos = ((self.pos[0]+1)% num_rows, self.pos[1])
         elif move=='left':
-            new_pos = (self.pos[0], (self.pos[1]-1) % cols)
+            new_pos = (self.pos[0], (self.pos[1]-1) % num_cols)
         elif move=='right':
-            new_pos = (self.pos[0], (self.pos[1]+1) % cols)
+            new_pos = (self.pos[0], (self.pos[1]+1) % num_cols)
         else:
             raise('wrong direction for checking move')
         return new_pos
