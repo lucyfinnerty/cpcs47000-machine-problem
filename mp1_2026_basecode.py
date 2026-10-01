@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Name: [your name]
+Name: Christopher Lodzinski, Lucille Finnerty, Jeffrey Elsenbach, and Bret Evenson
 Date: 2026-09-27
 Course: Artificial Intelligence
 Semester: Fall 2026
@@ -10,7 +10,7 @@ Assignment: MP1 - Robot navigation
 """
 
 import numpy as np
-import queue # Needed for frontier queue (wont need for new implementation)
+import queue
 from heapq import heapify
 
 
@@ -59,7 +59,6 @@ class MazeState():
     
     def __lt__(self, other):
         """ Allows for ordering the states by the path (g) cost """
-        #return self.gcost < other.gcost
         return self.fcost < other.fcost
     
     def __str__(self):
@@ -82,10 +81,10 @@ class MazeState():
         self.maze[self.pos] = MazeState.PATH
     
     def get_new_pos(self, move):
-        """ Returns a new position from the current position and the specified move 
-        *UPDATED: the modulo operations implement wrap-around movement 
+        """ 
+        Returns a new position from the current position and the specified move. 
+        Modulo operations implement wrap-around movement 
         """
-
         num_rows, num_cols = self.maze.shape
         if move=='up':
             new_pos = ((self.pos[0]-1) % num_rows, self.pos[1])
@@ -96,85 +95,97 @@ class MazeState():
         elif move=='right':
             new_pos = (self.pos[0], (self.pos[1]+1) % num_cols)
         else:
-            raise('wrong direction for checking move')
+            raise ValueError('wrong direction for checking move')
         return new_pos
         
-    """
-    *UPDATED: The can_move() method now implements wrap-around movement. 
-    The commented-out code is the original version that did not allow wrap-around 
-    movement.
-    """
     def can_move(self, move, disabled_move=None):
         """ Returns true if agent can move in the given direction """
         if move == disabled_move:
             return False
         new_pos = self.get_new_pos(move)
-
-        #if new_pos[0] < 0 or new_pos[0] >= self.maze.shape[0] or new_pos[1] < 0 or new_pos[1] >= self.maze.shape[1]:
-        #    return False
-        #else:
-
+         # the move is allowed if the destination is not a wall
         return self.maze[new_pos]!=MazeState.WALL
 
-
-
-    # -----------------IMPLEMENT CODE-------------------
-    #def heuristic(self):
+    def heuristic(self):
         """ Returns the heuristic value for the current state """
+        num_rows, num_cols = self.maze.shape
+        minDist = float('inf')
 
+        # check the distance to each exit and return the minimum distance
+        for i in range(len(self.ends[0])):
+            exit_row = self.ends[0][i]
+            exit_col = self.ends[1][i]
+
+            row_distance = abs(self.pos[0] - exit_row)
+            col_distance = abs(self.pos[1] - exit_col)
+
+            # account for wrap-around movement
+            row_distance = min(row_distance, num_rows - row_distance)
+            col_distance = min(col_distance, num_cols - col_distance)
+
+            total_distance = row_distance + col_distance
+            
+            if total_distance < minDist:
+                minDist = total_distance
+
+        return minDist
     
     def gen_next_state(self, move):
-        """ Generates a new MazeState object by taking move from current state 
-        *UPDATED: The new state is now generated with the fcost value calculated as
-        fcost = gcost + heuristic()
+        """  
+        Generates a new MazeState object by taking move from current
+        state. The f-cost is calculated as g-cost + heuristic.
         """
         new_pos = self.get_new_pos(move)
         if self.maze[new_pos] != MazeState.EXIT:
             self.maze[new_pos] = MazeState.VISITED
-        #return MazeState(new_pos, self.gcost+1, self, move)
         new_state = MazeState(new_pos, self.gcost+1, self, move)
         new_state.fcost = new_state.gcost + new_state.heuristic()
 
         return new_state
-
-
-
-    # -----------------IMPLEMENT CODE-------------------
+    
     def run_astar(disabled_move):
-        """ Runs the A* search algorithm to find the shortest path to the exit """
-        #reset the maze for a new run
+        """ 
+        Runs the A* search algorithm to find the shortest path to the exit while
+        disabling the specified movement direction.
+
+        A* selects states using f(n) = g(n) + h(n), where g(n)
+        is the path cost so far and h(n) is the heuristic estimate
+        of the remaining distance to the closest exit.
+        """
+        # reset the maze for a new run
         MazeState.reset_state()
     
-        # Load start state onto frontier priority queue
-        frontier = queue.PriorityQueue()  # This does best-first search
+        # load start state onto frontier priority queue
+        frontier = queue.PriorityQueue()
         start_state = MazeState()
+        start_state.fcost = start_state.gcost + start_state.heuristic()
         frontier.put(start_state)
     
-        # Keep a closed set of states to which optimal path was already found
+        # keep a closed set of states to which optimal path was already found
         closed_set = set()
     
-        # Expand state (up to 4 moves possible)
+        # expand state (up to 4 moves possible)
         possible_moves = ['left', 'right', 'down', 'up']
     
         num_states = 0
-        #initialize the goal state
-        goal_state = None
+        goal_state = None # initialize the goal state
+
         while not frontier.empty():
-            # Choose state at front of priority queue
+            # choose state at front of priority queue
             next_state = frontier.get()
             num_states += 1
     
-            # If goal then quit and return path
+            # if goal then quit and return path
             if next_state.is_goal():
                 goal_state = next_state
                 break
     
-            # Add state chosen for expansion to closed_set
+            # add state chosen for expansion to closed_set
             closed_set.add(next_state)
     
-            # Expanding the node
+            # expand the current state by generating all valid moves
             for move in possible_moves:
-                #added disabled_move to skip the disabled direction
+                # added disabled_move to skip the disabled direction
                 if next_state.can_move(move, disabled_move):
                     neighbor = next_state.gen_next_state(move)
                     if neighbor in closed_set:
@@ -182,33 +193,29 @@ class MazeState():
                     if neighbor not in frontier.queue:
                         frontier.put(neighbor)
                     else:
-                        #find and compare old route to new route
+                        # find and compare old route to new route
                         index = frontier.queue.index(neighbor)
-                        #keep it if it is a better route
-                        if neighbor.gcost < frontier.queue[index].gcost:
+                        # keep it if it is a better route
+                        if neighbor.fcost < frontier.queue[index].fcost:
                             frontier.queue[index] = neighbor
-                            #resort the list
+                            # resort the list
                             heapify(frontier.queue)
     
-        #added a case for if there is no solution to the maze
+        # added a case for if there is no solution to the maze
         if goal_state is None:
             print(start_state)
             print('No solution')
             return None
-    
+
+        # display solution path
         goal_state.show_path()
         print(start_state)
         print('\nNumber of states visited =', num_states)
         path_length = MazeState.move_num - 1
         print('\nLength of shortest path = ', path_length)
-        #added path length return
         return path_length
 
-
-
-#-----------EDIT BELOW THIS LINE FOR NEW A* IMPLEMENTATION----------------
-
-# Display the heading info
+# display the heading info
 print('Artificial Intelligence')
 print('MP1: Robot navigation')
 print('SEMESTER: Fall 2026')
@@ -216,10 +223,9 @@ print('NAME: Christopher Lodzinski, Lucille Finnerty, Jeffrey Elsenbach, and Bre
 print()
 
 print('INITIAL MAZE')
-
 print(MazeState())
 
-#try each move as the disabled one and keep the shortest solution
+# try each move as the disabled one and keep the shortest solution
 best_move = None
 best_length = None
 for move in ['left', 'right', 'down', 'up']:
